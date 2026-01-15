@@ -13,26 +13,13 @@ const PORT = process.env.PORT || 3001;
 
 // ========== MIDDLEWARE ==========
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
+  origin: [
+    'http://localhost:5173',
+    'https://zetss125.github.io'
+  ],
+  credentials: true,
 }));
 
-// OR simpler version (allows all in development):
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://zetss125.github.io'
-    : 'http://localhost:5173',
-  credentials: true
-}));
 
 // ========== MOCK DATABASE ==========
 let leadsDatabase = [];
@@ -177,7 +164,7 @@ function generateMockLead(token) {
 
 // ========== START SERVER ==========
 app.listen(PORT, () => {
-  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+  console.log(`🚀 Backend server running on port ${PORT}`);
   console.log(`📊 API endpoints:`);
   console.log(`   GET  /health - Health check`);
   console.log(`   POST /api/analyze-facebook - Analyze token (mock)`);
