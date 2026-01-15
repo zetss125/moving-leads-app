@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchLeads, deleteLead } from '../utils/api';
 import axios from 'axios';
 const API_BASE = 'https://moving-leads-app.onrender.com';
 export default function LeadsPage() {
@@ -12,21 +13,24 @@ export default function LeadsPage() {
   const [itemsPerPage] = useState(10);
   const [exporting, setExporting] = useState(false);
 
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  const fetchLeads = async () => {
+  const loadLeads = async () => {
   try {
     setLoading(true);
-    const response = await axios.get(`${API_BASE}/api/leads`);
-    setLeads(response.data);
-  } catch (error) {
-    console.error('Error fetching leads:', error);
+    const data = await fetchLeads();
+    setLeads(data);
+  } catch (err) {
+    console.error(err);
+    setLeads([]);
   } finally {
     setLoading(false);
   }
 };
+
+useEffect(() => {
+  loadLeads();
+}, []);
+
+
 
 
   const handleSelectLead = (id) => {
@@ -46,20 +50,33 @@ export default function LeadsPage() {
   };
 
   const deleteSelectedLeads = async () => {
-    if (!window.confirm(`Delete ${selectedLeads.length} selected leads?`)) return;
-    
-    try {
-      for (const id of selectedLeads) {
-        await axios.delete(`${API_BASE}/api/leads/${lead.id}`);
-      }
-      setSelectedLeads([]);
-      fetchLeads();
-    } catch (error) {
-      console.error('Error deleting leads:', error);
-    }
-  };
+  if (!window.confirm(`Delete ${selectedLeads.length} selected leads?`)) return;
 
-  const exportSelectedToCSV = () => {
+  try {
+    for (const id of selectedLeads) {
+      await deleteLead(id);
+    }
+    setSelectedLeads([]);
+    await loadLeads(); // or fetchLeads wrapper
+  } catch (error) {
+    console.error('Error deleting leads:', error);
+  }
+};
+
+if (!Array.isArray(leads)) {
+  return (
+    <div className="p-8 text-red-600">
+      Failed to load leads. Please try again later.
+    </div>
+  );
+}
+
+  
+
+
+
+
+const exportSelectedToCSV = () => {
     if (selectedLeads.length === 0) {
       alert('Please select leads to export');
       return;

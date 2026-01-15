@@ -1,9 +1,8 @@
 // src/utils/api.js
 
-const API_BASE_URL =
-  import.meta.env.PROD
-    ? 'https://moving-leads-app.onrender.com'
-    : 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.PROD
+  ? 'https://moving-leads-app.onrender.com'
+  : 'http://localhost:3001';
 
 export async function fetchLeads() {
   const response = await fetch(`${API_BASE_URL}/api/leads`);
@@ -24,7 +23,7 @@ export async function analyzeFacebookToken(token) {
 
 export async function deleteLead(id) {
   const response = await fetch(`${API_BASE_URL}/api/leads/${id}`, {
-    method: 'DELETE'
+    method: 'DELETE',
   });
   return response.json();
 }

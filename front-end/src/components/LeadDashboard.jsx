@@ -285,7 +285,7 @@ export default function LeadDashboard({ userData }) {
             <div className="mt-2 text-sm text-blue-700">
               <p>
                 Leads are scored based on social media signals indicating moving intent.
-                High priority leads (>60) are most likely to need moving services soon.
+                High priority leads ('{'>'}'60) are most likely to need moving services soon.
               </p>
             </div>
           </div>
