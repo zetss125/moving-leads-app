@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+const API_BASE = 'https://moving-leads-app.onrender.com';
 export default function LeadsPage() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,16 +17,17 @@ export default function LeadsPage() {
   }, []);
 
   const fetchLeads = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get('http://localhost:3001/api/leads');
-      setLeads(response.data);
-    } catch (error) {
-      console.error('Error fetching leads:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    const response = await axios.get(`${API_BASE}/api/leads`);
+    setLeads(response.data);
+  } catch (error) {
+    console.error('Error fetching leads:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSelectLead = (id) => {
     setSelectedLeads(prev =>
@@ -49,7 +50,7 @@ export default function LeadsPage() {
     
     try {
       for (const id of selectedLeads) {
-        await axios.delete(`http://localhost:3001/api/leads/${id}`);
+        await axios.delete(`${API_BASE}/api/leads/${lead.id}`);
       }
       setSelectedLeads([]);
       fetchLeads();
@@ -101,9 +102,9 @@ export default function LeadsPage() {
   // Filter and sort leads
   const filteredLeads = leads
     .filter(lead => 
-      lead.name.toLowerCase().includes(search.toLowerCase()) ||
-      lead.email.toLowerCase().includes(search.toLowerCase()) ||
-      lead.location.toLowerCase().includes(search.toLowerCase())
+      (lead.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (lead.email || '').toLowerCase().includes(search.toLowerCase()) ||
+      (lead.location || '').toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => {
       let aValue, bValue;
@@ -316,7 +317,7 @@ export default function LeadsPage() {
                             lead.score > 30 ? 'bg-yellow-600' :
                             'bg-green-600'
                           }`}
-                          style={{ width: `${lead.score}%` }}
+                          style={{ width: `${Number(lead.score) || 0}%` }}
                         ></div>
                       </div>
                       <span className={`text-sm font-bold ${
@@ -358,7 +359,7 @@ export default function LeadsPage() {
                     <button
                       onClick={() => {
                         if (window.confirm('Delete this lead?')) {
-                          axios.delete(`http://localhost:3001/api/leads/${lead.id}`)
+                          axios.delete(`${API_BASE}/api/leads/${lead.id}`)
                             .then(() => fetchLeads());
                         }
                       }}
