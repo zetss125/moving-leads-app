@@ -11,10 +11,11 @@ useEffect(() => {
   const token = urlParams.get('token');
 
   if (token) {
-    // Remove token from URL for cleanliness
-    const newUrl = window.location.pathname;
-    window.history.replaceState({}, document.title, newUrl);
+    // Remove only the query string, keep the path
+    const currentPath = window.location.pathname;
+    window.history.replaceState({}, document.title, currentPath);
 
+    // Call backend to fetch lead info
     (async () => {
       setLoading(true);
       try {
@@ -22,7 +23,6 @@ useEffect(() => {
           `http://localhost:3001/api/analyze-facebook`,
           { accessToken: token }
         );
-
         const lead = response.data.lead;
         onLogin({ token, user: lead, platform: 'facebook' });
       } catch (err) {
@@ -33,6 +33,7 @@ useEffect(() => {
     })();
   }
 }, []);
+
 
 
 
