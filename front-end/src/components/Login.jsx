@@ -7,53 +7,49 @@ export default function Login({ onLogin }) {
   const [activeTab, setActiveTab] = useState('facebook'); // 'facebook' or 'mock'
 
    useEffect(() => {
-    // 1️⃣ Extract token from URL if it exists
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
 
-    if (token) {
-      // Clear token from URL
-      window.history.replaceState({}, document.title, "/");
+  if (!token) return;
 
-      // 2️⃣ Fetch posts from backend and log in
-      (async () => {
-        setLoading(true);
-        try {
-          const response = await axios.get(
-            `https://moving-leads-backend.onrender.com/api/my-posts`,
-            { params: { accessToken: token } }
-          );
+  window.history.replaceState({}, document.title, "/");
 
-          const posts = response.data.posts;
+  (async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://moving-leads-backend.onrender.com/api/my-posts`,
+        { params: { accessToken: token } }
+      );
 
-          // Convert posts into leads
-          const leads = posts.map(post => ({
-            id: post.id,
-            name: 'Your Name', // Replace with your FB name if needed
-            email: 'your-email@example.com',
-            location: 'Your Location',
-            platform: 'facebook',
-            score: post.message?.includes('moving') ? 80 : 50,
-            urgency: post.message?.includes('moving') ? 'HIGH' : 'MEDIUM',
-            signals: [post.message || post.story],
-            timestamp: post.created_time
-          }));
+      const posts = response.data.posts;
 
-          // Call your onLogin function with first lead or token
-          onLogin({
-            token,
-            user: leads[0] || null,
-            platform: 'facebook'
-          });
+      const leads = posts.map(post => ({
+        id: post.id,
+        name: 'Your Name',
+        email: 'your-email@example.com',
+        location: 'Your Location',
+        platform: 'facebook',
+        score: post.message?.includes('moving') ? 80 : 50,
+        urgency: post.message?.includes('moving') ? 'HIGH' : 'MEDIUM',
+        signals: [post.message || post.story],
+        timestamp: post.created_time
+      }));
 
-        } catch (err) {
-          setError(err.response?.data?.error || err.message || 'Failed to fetch posts');
-        } finally {
-          setLoading(false);
-        }
-      })();
+      onLogin({
+        token,
+        user: leads[0] || null,
+        platform: 'facebook'
+      });
+
+    } catch (err) {
+      setError(err.response?.data?.error || err.message || 'Failed to fetch posts');
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  })();
+}, [onLogin]); // ✅ include onLogin as dependency
+
   
   
   
@@ -110,9 +106,14 @@ export default function Login({ onLogin }) {
       ? 'https://moving-leads-backend.onrender.com'
       : 'http://localhost:3001'; // your local backend
 
-  window.location.href = `${backendUrl}/auth/facebook`;
-};
+  const frontendUrl =
+    process.env.NODE_ENV === 'production'
+      ? 'https://zetss125.github.io/moving-leads-app'
+      : 'http://localhost:5173';
 
+  // Redirect user to Facebook OAuth
+  window.location.href = `${backendUrl}/auth/facebook?redirect_uri=${encodeURIComponent(frontendUrl)}`;
+};
 
 
   const handleManualToken = async (e) => {
