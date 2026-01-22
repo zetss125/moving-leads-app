@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import axios from 'axios';
 
 export default function Login({ onLogin }) {
@@ -6,6 +6,60 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('facebook'); // 'facebook' or 'mock'
 
+   useEffect(() => {
+    // 1️⃣ Extract token from URL if it exists
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (token) {
+      // Clear token from URL
+      window.history.replaceState({}, document.title, "/");
+
+      // 2️⃣ Fetch posts from backend and log in
+      (async () => {
+        setLoading(true);
+        try {
+          const response = await axios.get(
+            `https://moving-leads-backend.onrender.com/api/my-posts`,
+            { params: { accessToken: token } }
+          );
+
+          const posts = response.data.posts;
+
+          // Convert posts into leads
+          const leads = posts.map(post => ({
+            id: post.id,
+            name: 'Your Name', // Replace with your FB name if needed
+            email: 'your-email@example.com',
+            location: 'Your Location',
+            platform: 'facebook',
+            score: post.message?.includes('moving') ? 80 : 50,
+            urgency: post.message?.includes('moving') ? 'HIGH' : 'MEDIUM',
+            signals: [post.message || post.story],
+            timestamp: post.created_time
+          }));
+
+          // Call your onLogin function with first lead or token
+          onLogin({
+            token,
+            user: leads[0] || null,
+            platform: 'facebook'
+          });
+
+        } catch (err) {
+          setError(err.response?.data?.error || err.message || 'Failed to fetch posts');
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+  }, []);
+  
+  
+  
+  
+  
+  
   const handleMockLogin = async () => {
     setLoading(true);
     setError('');
@@ -50,8 +104,15 @@ export default function Login({ onLogin }) {
   const handleFacebookLogin = () => {
   setLoading(true);
   setError('');
-  window.location.href = 'https://moving-leads-backend.onrender.com/auth/facebook';
+
+  const backendUrl =
+    process.env.NODE_ENV === 'production'
+      ? 'https://moving-leads-backend.onrender.com'
+      : 'http://localhost:3001'; // your local backend
+
+  window.location.href = `${backendUrl}/auth/facebook`;
 };
+
 
 
   const handleManualToken = async (e) => {
