@@ -6,49 +6,59 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('facebook'); // 'facebook' or 'mock'
 
-   useEffect(() => {
+  useEffect(() => {
+  // 1️⃣ Try to get token from query string (?token=...) or URL hash (#access_token=...)
   const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
+  let token = urlParams.get('token');
 
-  if (!token) return;
+  if (!token && window.location.hash) {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1)); // remove '#'
+    token = hashParams.get('access_token');
+  }
 
-  window.history.replaceState({}, document.title, "/");
+  if (token) {
+    // Clear token from URL (prevents looping)
+    window.history.replaceState({}, document.title, '/');
 
-  (async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://moving-leads-backend.onrender.com/api/my-posts`,
-        { params: { accessToken: token } }
-      );
+    // 2️⃣ Fetch posts from backend and log in
+    (async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          'https://moving-leads-backend.onrender.com/api/my-posts',
+          { params: { accessToken: token } }
+        );
 
-      const posts = response.data.posts;
+        const posts = response.data.posts;
 
-      const leads = posts.map(post => ({
-        id: post.id,
-        name: 'Your Name',
-        email: 'your-email@example.com',
-        location: 'Your Location',
-        platform: 'facebook',
-        score: post.message?.includes('moving') ? 80 : 50,
-        urgency: post.message?.includes('moving') ? 'HIGH' : 'MEDIUM',
-        signals: [post.message || post.story],
-        timestamp: post.created_time
-      }));
+        const leads = posts.map(post => ({
+          id: post.id,
+          name: 'Your Name',
+          email: 'your-email@example.com',
+          location: 'Your Location',
+          platform: 'facebook',
+          score: post.message?.includes('moving') ? 80 : 50,
+          urgency: post.message?.includes('moving') ? 'HIGH' : 'MEDIUM',
+          signals: [post.message || post.story],
+          timestamp: post.created_time
+        }));
 
-      onLogin({
-        token,
-        user: leads[0] || null,
-        platform: 'facebook'
-      });
+        // Pass the first lead (or null) to your onLogin
+        onLogin({
+          token,
+          user: leads[0] || null,
+          platform: 'facebook'
+        });
 
-    } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Failed to fetch posts');
-    } finally {
-      setLoading(false);
-    }
-  })();
-}, [onLogin]); // ✅ include onLogin as dependency
+      } catch (err) {
+        setError(err.response?.data?.error || err.message || 'Failed to fetch posts');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }
+}, []);
+
 
   
   
