@@ -6,7 +6,7 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('facebook'); // 'facebook' or 'mock'
 
- useEffect(() => {
+useEffect(() => {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
 
@@ -15,42 +15,25 @@ export default function Login({ onLogin }) {
     const newUrl = window.location.pathname;
     window.history.replaceState({}, document.title, newUrl);
 
-    // 1️⃣ Call backend to fetch posts (if needed)
     (async () => {
       setLoading(true);
       try {
-        const response = await axios.get(
-          `http://localhost:3001/api/my-posts`,
-          { params: { accessToken: token } }
+        const response = await axios.post(
+          `http://localhost:3001/api/analyze-facebook`,
+          { accessToken: token }
         );
 
-        const posts = response.data.posts || [];
-
-        const leads = posts.map(post => ({
-          id: post.id,
-          name: 'Your Name',
-          email: 'your-email@example.com',
-          location: 'Your Location',
-          platform: 'facebook',
-          score: post.message?.includes('moving') ? 80 : 50,
-          urgency: post.message?.includes('moving') ? 'HIGH' : 'MEDIUM',
-          signals: [post.message || post.story],
-          timestamp: post.created_time
-        }));
-
-        onLogin({
-          token,
-          user: leads[0] || null,
-          platform: 'facebook'
-        });
+        const lead = response.data.lead;
+        onLogin({ token, user: lead, platform: 'facebook' });
       } catch (err) {
-        setError(err.response?.data?.error || err.message || 'Failed to fetch posts');
+        setError(err.response?.data?.error || err.message || 'Failed to fetch lead');
       } finally {
         setLoading(false);
       }
     })();
   }
 }, []);
+
 
 
 
