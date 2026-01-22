@@ -48,11 +48,11 @@ export default function Login({ onLogin }) {
   };
 
   const handleFacebookLogin = () => {
-    setLoading(true);
-    setError('');
-    // Redirect to Facebook OAuth
-    window.location.href = 'http://localhost:3001/auth/facebook';
-  };
+  setLoading(true);
+  setError('');
+  window.location.href = 'https://moving-leads-backend.onrender.com/auth/facebook';
+};
+
 
   const handleManualToken = async (e) => {
     e.preventDefault();
@@ -68,9 +68,11 @@ export default function Login({ onLogin }) {
 
     try {
       // Call backend API
-      const response = await axios.post('http://localhost:3001/api/analyze-facebook', {
-        accessToken: token
-      });
+      const response = await axios.post(
+  'https://moving-leads-backend.onrender.com/api/analyze-facebook',
+  { accessToken: token }
+);
+
 
       if (response.data.success) {
         onLogin({
