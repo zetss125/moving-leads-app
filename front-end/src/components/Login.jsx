@@ -6,30 +6,25 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('facebook'); // 'facebook' or 'mock'
 
-  useEffect(() => {
-  // 1️⃣ Try to get token from query string (?token=...) or URL hash (#access_token=...)
+ useEffect(() => {
   const urlParams = new URLSearchParams(window.location.search);
-  let token = urlParams.get('token');
-
-  if (!token && window.location.hash) {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1)); // remove '#'
-    token = hashParams.get('access_token');
-  }
+  const token = urlParams.get('token');
 
   if (token) {
-    // Clear token from URL (prevents looping)
-    window.history.replaceState({}, document.title, '/');
+    // Remove token from URL for cleanliness
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
 
-    // 2️⃣ Fetch posts from backend and log in
+    // 1️⃣ Call backend to fetch posts (if needed)
     (async () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          'https://moving-leads-backend.onrender.com/api/my-posts',
+          `http://localhost:3001/api/my-posts`,
           { params: { accessToken: token } }
         );
 
-        const posts = response.data.posts;
+        const posts = response.data.posts || [];
 
         const leads = posts.map(post => ({
           id: post.id,
@@ -43,13 +38,11 @@ export default function Login({ onLogin }) {
           timestamp: post.created_time
         }));
 
-        // Pass the first lead (or null) to your onLogin
         onLogin({
           token,
           user: leads[0] || null,
           platform: 'facebook'
         });
-
       } catch (err) {
         setError(err.response?.data?.error || err.message || 'Failed to fetch posts');
       } finally {
@@ -58,6 +51,7 @@ export default function Login({ onLogin }) {
     })();
   }
 }, []);
+
 
 
   
